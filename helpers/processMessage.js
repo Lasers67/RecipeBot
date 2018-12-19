@@ -15,6 +15,8 @@ const sendTextMessage = (senderId, text) => {
 	});
 };
 
+var laser = 0;
+
 const sendFestivalNotification = (senderId) => {
 	var min=0;
 	var max=2;
@@ -36,7 +38,7 @@ const sendFestivalNotification = (senderId) => {
 const occasionResponse = (senderId, occasion) => {
 	var text;
 	switch(occasion) {
-		case "Dussera": 
+		case "Dussera":
 			text = "Sabudana Khichdi and Besan Ladoo are some Dusshera special. Which do you want to cook today?";
 			break;
 		case "Holi":
@@ -89,17 +91,28 @@ module.exports = (event) => {
 			sendTextMessage(senderId, "Are you ready to proceed?");
 			return;
 		}
+		else if(donthave)
+		{
+
+			const { noIng } = require("./scrape.js");
+			donthave = 0;
+			replace_ing[missing] = null;
+			laser = noIng(senderId, missing);
+			if(laser == 1)
+				sendTextMessage(senderId, "So should we continue?");
+			return;
+		}
 
 		if (response.result.metadata.intentName == 'occasion'){
 				occasionResponse(senderId, response.result.parameters.occasion);
 				return;
 		}
-
 		if (response.result.action == 'smalltalk.confirmation.yes' || response.result.metadata.intentName == 'Positive Response'){
-			showRecipe(senderId, replace_ing, event.message.text);
+			var complete = showRecipe(senderId, replace_ing, event.message.text, laser);
+			if(complete) replace_ing = [];
 			return;
 		}
-		if (response.result.action == 'smalltalk.confirmation.no'){
+		if (response.result.action == 'smalltalk.confirmation.no' && !donthave){
 			sendTextMessage(senderId, "okay, I'll wait.");
 			return;
 		}

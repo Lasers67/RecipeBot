@@ -34,7 +34,7 @@ const sendTextMessage = (senderId, text, image='') => {
 };
 var cheerio = require('cheerio');
 
-let time, ingredients = [], steps = [];
+let time, ingredients = [], steps = [],priority=[];
 var count = 0;
 
 const scrapeDishes = (name, senderId) => {
@@ -60,25 +60,37 @@ const scrapeDishes = (name, senderId) => {
 		return dishes;
 	});
 }
-
+var Recipe=[];
 const scrapeRecipe = (url, senderId) => {
+
 	request(url, function (error, response, html) {
 	  if (!error && response.statusCode == 200) {
 		  steps = [];
 		  ingredients = [];
+		  priority=[];
 	    var $ = cheerio.load(html);
+		if(url== "https://www.allrecipes.com/recipe/20080/chili-chicken/" )
+		{
+			priority=['L','L','M','H'];
+		}
 		var src = $('.rec-photo').attr("src");
 		console.log(src);
 		sendTextMessage(senderId, "", src);
 		if(src)
 		sendTextMessage(senderId, "The dish looks to be yummy!");
 		let message = "";
+		var i=0;
 		$('span.recipe-ingred_txt[itemprop]').each(function(i, element){
 	      var a = $(this).prev();
-	      // console.log(element.children[0].data);
+		  // console.log(element.children[0].data);
 		  // console.log($(this).text());
 		  message += "* " + $(this).text() + '\n';
-		  ingredients.push($(this).text());
+		  if(url=="https://www.allrecipes.com/recipe/20080/chili-chicken/" && i==3 )
+		  	ingredients.push(String($(this).text()).split(" ").slice(1).join(" "));
+		  else
+		  	ingredients.push(String($(this).text()).split(" ").slice(2).join(" "));
+		  console.log(ingredients);
+		  // i++;
 	    });
 		sendTextMessage(senderId, message);
 		setTimeout(function(){
@@ -97,7 +109,18 @@ const scrapeRecipe = (url, senderId) => {
 	      // console.log(element.children[0].data);
 		  // console.log($(this).text());
 		  var res=$(this).text().split(".");
-		  console.log(res);
+		  Recipe.push(res);
+		  var to_print="";
+
+
+
+		//   for(var i=0;i<res.length-1;i++)
+	 	// {
+		// 	if()
+		// }
+
+
+
 		  steps.push($(this).text());
 		});
 	  }
@@ -105,58 +128,98 @@ const scrapeRecipe = (url, senderId) => {
 	});
 }
 
-const showRecipe = (senderId, replace_ing, text) =>{
+const showRecipe = (senderId, replace_ing, text,laser) =>{
 	if (count == steps.length){
 		count = 0;
 		steps = [];
 		ingredients = [];
 		sendTextMessage(senderId, "What are you saying " + text + " about? :D");
-		return;
+		return true;
 	}
-	var message = "";
-	var flag = 0;
-	console.log(replace_ing);
-	var temp = String(steps[count]).trim().split(" ");
-	for (var i = 0; i < temp.length; i++) {
-		if(temp[i].toLowerCase() in replace_ing) {
-			message+= replace_ing[temp[i]] + " ";
-			continue;
-		}
-		for (var j in  replace_ing) {
-			if(temp[i].toLowerCase().includes(j)){
-				message+= replace_ing[j] + " ";
-				flag = 1;
-				break;
+	if(laser==0){
+		var message = "";
+		var flag = 0;
+		console.log(replace_ing);
+		var temp = String(steps[count]).trim().split(" ");
+		for (var i = 0; i < temp.length; i++) {
+			if(temp[i].toLowerCase() in replace_ing) {
+				message+= replace_ing[temp[i]] + " ";
+				continue;
 			}
+			for (var j in  replace_ing) {
+				if(temp[i].toLowerCase().includes(j)){
+					message+= replace_ing[j] + " ";
+					flag = 1;
+					break;
+				}
+			}
+			if(flag) {
+				flag = 0;
+				continue;
+			}
+			if(temp[i].toLowerCase() in replace_ing) {
+				message+= replace_ing[temp[i]] + " ";
+				continue;
+			}
+			message+=temp[i] + " ";
 		}
-		if(flag) {
-			flag = 0;
-			continue;
+		sendTextMessage(senderId, message);
+		count++;
+		if (count+1 == steps.length){
+			count = 0;
+			steps = [];
+			ingredients = [];
+			sendTextMessage(senderId, "That was the last step!");
+			return true;
 		}
-		if(temp[i].toLowerCase() in replace_ing) {
-			message+= replace_ing[temp[i]] + " ";
-			continue;
-		}
-		message+=temp[i] + " ";
+		if (count != steps.length){
+			setTimeout(function(){
+				var min=0;
+				var max=next_step.length;
+				var random =Math.floor(Math.random() * (+max - +min)) + +min;
+				sendTextMessage(senderId, next_step[random]);
+				// sendTextMessage(senderId, "Are you ready for the next step?");
+			},1000);
+		};
 	}
-	sendTextMessage(senderId, message);
-	count++;
-	if (count+1 == steps.length){
-		count = 0;
-		steps = [];
-		ingredients = [];
-		sendTextMessage(senderId, "That was the last step!");
-		return;
+	else{
+		var message = "";
+		var flag = 0;
+		// console.log(replace_ing);
+		var temp = Recipe[count];
+		for (var i = 0; i < temp.length; i++) {
+			for (var j in  replace_ing) {
+				if(temp[i].toLowerCase().includes(j)){
+					flag = 1;
+					break;
+				}
+			}
+			if(flag) {
+				flag = 0;
+				continue;
+			}
+			message+=temp[i];
+		}
+		sendTextMessage(senderId, message);
+		count++;
+		if (count+1 == steps.length){
+			count = 0;
+			steps = [];
+			ingredients = [];
+			sendTextMessage(senderId, "That was the last step!");
+			return true;
+		}
+		if (count != steps.length){
+			setTimeout(function(){
+				var min=0;
+				var max=next_step.length;
+				var random =Math.floor(Math.random() * (+max - +min)) + +min;
+				sendTextMessage(senderId, next_step[random]);
+				// sendTextMessage(senderId, "Are you ready for the next step?");
+			},1000);
+		};
 	}
-	if (count != steps.length){
-		setTimeout(function(){
-			var min=0;
-    		var max=next_step.length;
-    		var random =Math.floor(Math.random() * (+max - +min)) + +min;
-			sendTextMessage(senderId, next_step[random]);
-			// sendTextMessage(senderId, "Are you ready for the next step?");
-		},1000);
-	};
+
 
 }
 
@@ -283,7 +346,34 @@ const ability = (senderId) => {
 	});
 
 }
+var alter_recipe_message=["No Problem! We can do without that", "Its okay, the dish will still work fine","No Problem! We can still continue more or less :)"];
+var no_more=["Problem! We can't do without that item", "That is one of the main ingredient. Can't cook without that!","Cannot do without that ingredient, you'd need to make another dish :( "];
+const noIng = (senderId, missing) => {
+	console.log(ingredients.indexOf(missing),missing,priority);
+	let idx = -1;
+	for (var i = 0; i < ingredients.length; i++) {
+		if(ingredients[i].includes(missing)) idx = i;
+	}
+	console.log(idx);
+	if(priority[idx]=='L')
+	{
+		var min=0;
+		var max=alter_recipe_message.length;
+		var random =Math.floor(Math.random() * (+max - +min)) + +min;
+		sendTextMessage(senderId, alter_recipe_message[random]);
+		return 1;
+	}
+	if(priority[idx]=='M' || priority[idx]=='H')
+	{
+		var min=0;
+		var max=no_more.length;
+		var random =Math.floor(Math.random() * (+max - +min)) + +min;
+		sendTextMessage(senderId, no_more[random]);
+		count = steps.length - 1;
+		return 2;
+	}
 
+}
 module.exports = {
-	sendDesc, ability, scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
+	sendDesc, ability, scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt, noIng
 }
