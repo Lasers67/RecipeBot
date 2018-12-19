@@ -16,10 +16,21 @@ const sendTextMessage = (senderId, text) => {
 };
 
 const sendFestivalNotification = (senderId) => {
-	sendTextMessage(senderId, "Hello there! Happy Dusshera!");
-	setTimeout(function () {
-		sendTextMessage(senderId, "Sabudana Khichdi and Besan Ladoo are some Dusshera special. Which do you want to cook them today?");
-	}, 2000);
+	var min=0;
+	var max=2;
+	var rand =Math.floor(Math.random() * (+max - +min)) + +min;
+	if(rand == 1) {
+
+		sendTextMessage(senderId, "Hello there! Happy Dusshera!");
+		setTimeout(function () {
+			sendTextMessage(senderId, "Sabudana Khichdi and Besan Ladoo are some Dusshera special. Which do you want to cook today?");
+		}, 2000);
+	} else {
+		sendTextMessage(senderId, "Hello there! Happy Holi!");
+		setTimeout(function () {
+			sendTextMessage(senderId, "Lassi and Chaat Papri are some Holi special. Which one would you prefer to cook today?");
+		}, 2000);
+	}
 }
 
 
@@ -32,12 +43,12 @@ module.exports = (event) => {
 	const message = event.message.text;
 	const apiaiSession = apiAiClient.textRequest(message, {sessionId: 'recipebot'});
 	console.log(message);
-	const { scrapeDishes, showRecipe, fromIngredients, findAlt } = require('./scrape.js');
+	const { ability, scrapeDishes, showRecipe, fromIngredients, findAlt } = require('./scrape.js');
 	apiaiSession.on('response', (response) => {
 		const result = response.result.fulfillment.speech;
 		console.log(response);
 		var d = new Date();
-		if(festival && d.getHours() == 11 && response.result.action == "input.welcome") {
+		if(festival && d.getHours() == 14 && response.result.action == "input.welcome") {
 				sendFestivalNotification(senderId);
 				festival = 0;
 				return;
@@ -64,6 +75,10 @@ module.exports = (event) => {
 			sendTextMessage(senderId, "okay, I'll wait.");
 			return;
 		}
+		if (response.result.metadata.intentName == 'BotAbilities'){
+				ability(senderId);
+				return;
+		}
 		if (response.result.metadata.intentName == 'get_ingredients'){
 			return;
 		}
@@ -89,6 +104,7 @@ module.exports = (event) => {
 		}
 		if (response.result.metadata.intentName == 'Ingredients_to_recipe'){
 			// console.log("ing");
+			console.log(response.result.parameters.ingredients);
 			fromIngredients(senderId, response.result.parameters.ingredients);
 			return;
 		}

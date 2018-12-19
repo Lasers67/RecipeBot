@@ -185,7 +185,7 @@ const fromIngredients = (senderId, ingredients) => {
 	});
 	Promise.all([getDishes]).then(() => {
 		sendTextMessage(senderId, "Here are some dishes you can make: ");
-		sendTextMessage(senderId, dishes_output);
+		setTimeout(function() {sendTextMessage(senderId, dishes_output);}, 2000);
 	});
 
 }
@@ -208,6 +208,7 @@ const findAlt = (senderId, ingredient) => {
 	sendTextMessage(senderId, message);
 	return alt_def;
 }
+
 
 const sendDesc = (senderId, name) => {
 	var dishes = [];
@@ -242,10 +243,43 @@ const scrapeDesc = (url, senderId) => {
 	      var a = $(this).prev();
 		  desc += ($(this).text());
 	    });
-		sendTextMessage(senderId, desc);	
+		sendTextMessage(senderId, desc);
 	};
 }
 
+const ability = (senderId) => {
+	var res = "I can do a variety of things related to recipes. Some of them include-\n";
+	res += '* Lookup recipes for you and provide them to you stepwise.\n';
+	res += '* List dishes you can make with the ingredients you have.\n';
+	res += '* Lookup for alternate ingredients that you may use in case some ingredients are not available.\n';
+	res += '* Alert dishes according to a particular festival or occasion.\n';
+	// sendTextMessage(senderId, res);
+	request({
+		url: 'https://graph.facebook.com/v2.6/me/messages',
+		qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+		method: 'POST',
+		json: {
+			recipient: { id: senderId },
+			message: {
+				"text": res,
+				"quick_replies":[
+					{
+				  	"content_type":"text",
+				  	"title": "How to make rajma",
+			  		"payload":"123"
+					},
+					{
+				  	"content_type":"text",
+				  	"title": "I have ingredients",
+					"payload":"1234"
+			  		}
+		  		]
+			},
+		}
+	});
+
+}
+
 module.exports = {
-	scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt, ability
+	scrapeDishes,ability, scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
 }
