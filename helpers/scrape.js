@@ -209,6 +209,43 @@ const findAlt = (senderId, ingredient) => {
 	return alt_def;
 }
 
+const sendDesc = (senderId, name) => {
+	var dishes = [];
+	const firstResult = new Promise( resolve => {
+		request('https://www.allrecipes.com/search/results/?wt=' + name + '&sort=re', function (error, response, html) {
+	  		if (!error && response.statusCode == 200) {
+			    var $ = cheerio.load(html);
+				$('span.fixed-recipe-card__title-link').each(function(i, element){
+				  if(i==1) return false;
+				  var a = $(this).prev();
+				  dishes.push( {
+					  name: element.children[0].data,
+					  url: element.parent.attribs.href
+				  });
+				  scrapeDesc(element.parent.attribs.href, senderId);
+			    });
+				resolve();
+			}
+		});
+	});
+	return Promise.all([firstResult]).then(() => {
+		return dishes;
+	});
+}
+
+const scrapeDesc = (url, senderId) => {
+	request(url, function (error, response, html) {
+	  if (!error && response.statusCode == 200) {
+	    var $ = cheerio.load(html);
+		let desc = "";
+		$('div.submitter__description').each(function(i, element){
+	      var a = $(this).prev();
+		  desc += ($(this).text());
+	    });
+		sendTextMessage(senderId, desc);	
+	};
+}
+
 module.exports = {
-	scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
+	scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt, ability
 }

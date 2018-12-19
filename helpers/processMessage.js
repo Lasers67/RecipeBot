@@ -65,7 +65,11 @@ module.exports = (event) => {
 			return;
 		}
 		if (response.result.metadata.intentName == 'get_ingredients'){
-				return;
+			return;
+		}
+		if (response.result.metadata.intentName == 'Add_Description'){
+			sendDesc(senderId, response.result.parameters.recipe);
+			return;
 		}
 		if (response.result.metadata.intentName == 'unavailable_ingred'){
 				alt_def = findAlt(senderId, response.result.parameters.ingredient);
