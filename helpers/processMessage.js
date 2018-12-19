@@ -33,6 +33,30 @@ const sendFestivalNotification = (senderId) => {
 	}
 }
 
+const occasionResponse = (senderId, occasion) => {
+	var text;
+	switch(occasion) {
+		case "Dussera": 
+			text = "Sabudana Khichdi and Besan Ladoo are some Dusshera special. Which do you want to cook today?";
+			break;
+		case "Holi":
+			text = "Lassi and Chaat Papri are some Holi special. Which one would you prefer to cook today?";
+			break;
+		case "Christmas":
+			text = "Chocolate Tart and Milk Fudge are Christmas speciality. Which one are we cooking?";
+			break;
+		case "Diwali":
+			text = "Diwali is celebrated with Samosa and Barfi . Which one are we making?";
+			break;
+		case "Shraadh":
+			text = "People usually have Khichdi and Boiled Aloo during Shradh. Which of the two are you making?";
+			break;
+		default:
+			text = "My database currently doesn't have all of the worlds numerous occasions! Sorry :( ";
+			break;
+	}
+	sendTextMessage(senderId, text);
+}
 
 let dishes = [], donthave = 0, replace_ing = [], missing, flag = 0, festival = 1, alt_def;
 
@@ -66,6 +90,10 @@ module.exports = (event) => {
 			return;
 		}
 
+		if (response.result.metadata.intentName == 'occasion'){
+				occasionResponse(senderId, response.result.parameters.occasion);
+				return;
+		}
 
 		if (response.result.action == 'smalltalk.confirmation.yes' || response.result.metadata.intentName == 'Positive Response'){
 			showRecipe(senderId, replace_ing, event.message.text);
