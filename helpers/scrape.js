@@ -62,7 +62,8 @@ const scrapeDishes = (name, senderId) => {
 }
 var Recipe=[];
 const scrapeRecipe = (url, senderId) => {
-
+	Recipe=[];
+	steps=[];
 	request(url, function (error, response, html) {
 	  if (!error && response.statusCode == 200) {
 		  steps = [];
