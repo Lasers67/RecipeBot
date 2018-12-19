@@ -37,6 +37,7 @@ const sendFestivalNotification = (senderId) => {
 
 const occasionResponse = (senderId, occasion) => {
 	var text;
+	console.log('asd');
 	switch(occasion) {
 		case "Dussera":
 			text = "Sabudana Khichdi and Besan Ladoo are some Dusshera special. Which do you want to cook today?";
@@ -103,8 +104,8 @@ module.exports = (event) => {
 			return;
 		}
 
-		if (response.result.metadata.intentName == 'occasion'){
-				occasionResponse(senderId, response.result.parameters.occasion);
+		if (response.result.metadata.intentName == 'ocassion'){
+				occasionResponse(senderId, response.result.parameters.Occasions);
 				return;
 		}
 		if (response.result.action == 'smalltalk.confirmation.yes' || response.result.metadata.intentName == 'Positive Response'){
