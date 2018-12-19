@@ -1,5 +1,16 @@
 ## RecipeBot
-A recipe bot created during Inter IIT TechMeet 2018 at IIT Bombay. This bot helps you search for recipes using recipe name or by ingredients. Also, helpful to search for occasion related recipes. One more good ability of this bot is that it can suggest alternatives for the ingredients you do not have available for a particular recipe.
+A recipe bot created during Jio Inter IIT TechMeet 2018 at IIT Bombay. 
+
+## Problem Solution
+The bot aims to bridge the gap between delicious and lavish dishes and people not having the fancy ingredients to make them. It also helps people to make use of their leftover ingredients and cook good meals out of it. This bot helps you search for recipes using recipe name or by ingredients. Its ability to suggest cheaper and alternative ingredients would be a boon to a large mass of middle class Indians. 
+It is also designed to suggest dishes and recipies for different occasions of India related recipes. 
+
+## Technologies Used
+
+- NodeJS
+- Cheerio
+- DialogFlow
+- FB Messenger for Developers
 
 ### How to run
 
@@ -18,13 +29,6 @@ RecipeBot can do a variety of things related to recipes. Some of them are-
 -	List dishes you can make with the ingredients you have.
 -	Lookup for alternate ingredients that you may use in case some ingredients are not available.
 -	Alert dishes according to a particular festival or occasion.
-
-## Technologies Used
-
-- NodeJS
-- Cheerio
-- DialogFlow
-- FB Messenger for Developers
 
 ## How to contribute?
 Clone the repo and feel free to send any Pull Requests that you feel to be contructive.
