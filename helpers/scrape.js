@@ -1,5 +1,7 @@
 const FACEBOOK_ACCESS_TOKEN = 'EAADG5fKLZBWIBAIUOKXZAwSOe93qzzSnFSwLxwBKH52mYfpbu3zGLqGb8dUsMJku4dRWXtfSg0vHiGZB1V402CVznD3rF0TOZAePk5Vik0RF8VcQKWAZCu3CCkHXxZAxzBHVjCXhy5UDpwKMjPiFJcGkqWzeOyW57sETrPZBN6HggZDZD';
 const request = require('request');
+const { default_alt } = require('./alternate.js')
+
 const sendTextMessage = (senderId, text) => {
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
@@ -74,7 +76,7 @@ const scrapeRecipe = (url, senderId) => {
 	});
 }
 
-const showRecipe = (senderId) =>{
+const showRecipe = (senderId, replace_ing) =>{
 	if (count == steps.length){
 		count = 0;
 		steps = [];
@@ -82,8 +84,19 @@ const showRecipe = (senderId) =>{
 		sendTextMessage(senderId, "What are you saying yes about? :D");
 		return;
 	}
-	sendTextMessage(senderId, String(steps[count++]).trim());
-	if (count != steps.size){
+	var message = "";
+	console.log(replace_ing);
+	var temp = String(steps[count]).trim().split(" ");
+	for (var i = 0; i < temp.length; i++) {
+		if(temp[i].toLowerCase() in replace_ing) {
+			message+= replace_ing[temp[i]] + " ";
+			continue;
+		}
+		message+=temp[i] + " ";
+	}
+	sendTextMessage(senderId, message);
+	count++;
+	if (count != steps.length){
 		setTimeout(function(){
 			sendTextMessage(senderId, "Are you ready for the next step?");
 		},10000);
@@ -128,6 +141,23 @@ const fromIngredients = (senderId, ingredients) => {
 
 }
 
+const findAlt = (senderId, ingredient) => {
+	for (var i = 0; i < default_alt.length; i++) {
+		if (default_alt[i].name.toLowerCase().includes(ingredient[0].toLowerCase())) {
+			var options =  default_alt[i].diff.split("OR");
+			var message = "Do you have ";
+			for (var i = 0; i < options.length - 1; i++) {
+				// console.log(options[i].split(" ").slice(2));
+				message+=options[i].split(" ").slice(2).join(" ") + "OR ";
+			}
+			message+=options[options.length-1].split(" ").slice(2).join(" ") + "?";
+			break;
+		}
+	}
+	sendTextMessage(senderId, message);
+
+}
+
 module.exports = {
-	scrapeDishes, scrapeRecipe, showRecipe, fromIngredients
+	scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
 }

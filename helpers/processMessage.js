@@ -14,21 +14,30 @@ const sendTextMessage = (senderId, text) => {
 	});
 };
 
-let dishes = [];
+let dishes = [], donthave = 0, replace_ing = [], missing, flag = 0;
 
 module.exports = (event) => {
 	const senderId = event.sender.id;
 	const message = event.message.text;
 	const apiaiSession = apiAiClient.textRequest(message, {sessionId: 'recipebot'});
 	console.log(message);
-	const { scrapeDishes, showRecipe, fromIngredients } = require('./scrape.js');
+	const { scrapeDishes, showRecipe, fromIngredients, findAlt } = require('./scrape.js');
 	apiaiSession.on('response', (response) => {
 		const result = response.result.fulfillment.speech;
 		sendTextMessage(senderId, result);
 		console.log(response);
 		if(response.result.action == 'input.unknown') return;
-		if (response.result.action == 'smalltalk.confirmation.yes'){
-			showRecipe(senderId);
+		if(donthave && response.result.action == 'smalltalk.confirmation.yes' || response.result.metadata.intentName == 'Positive Response') {
+			donthave = 0;
+			replace_ing[missing] = response.result.parameters.ingredients[0].toLowerCase();
+			sendTextMessage(senderId, "Cool that works!");
+			sendTextMessage(senderId, "Are you ready to proceed?");
+			return;
+		}
+
+
+		if (response.result.action == 'smalltalk.confirmation.yes' || response.result.metadata.intentName == 'Positive Response'){
+			showRecipe(senderId, replace_ing);
 			return;
 		}
 		if (response.result.action == 'smalltalk.confirmation.no'){
@@ -38,12 +47,26 @@ module.exports = (event) => {
 		if (response.result.metadata.intentName == 'get_ingredients'){
 				return;
 		}
-
+		if (response.result.metadata.intentName == 'unavailable_ingred'){
+				findAlt(senderId, response.result.parameters.ingredient);
+				donthave = 1;
+				missing = response.result.parameters.ingredient[0].toLowerCase();
+				return;
+		}
+		if(donthave && response.result.metadata.intentName == 'Ingredients_to_recipe') {
+			donthave = 0;
+			replace_ing[missing] = response.result.parameters.ingredients[0].toLowerCase();
+			sendTextMessage(senderId, "Cool that works!");
+			sendTextMessage(senderId, "Are you ready to proceed?");
+			return;
+		}
 		if (response.result.metadata.intentName == 'Ingredients_to_recipe'){
-			console.log("ing");
+			// console.log("ing");
 			fromIngredients(senderId, response.result.parameters.ingredients);
 			return;
 		}
+
+
 		if(response.result.parameters.recipe == undefined) return;
 		console.log(response.result.parameters.recipe);
 		new Promise( resolve => {
