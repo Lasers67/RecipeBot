@@ -1,17 +1,36 @@
 const FACEBOOK_ACCESS_TOKEN = 'EAADG5fKLZBWIBAIUOKXZAwSOe93qzzSnFSwLxwBKH52mYfpbu3zGLqGb8dUsMJku4dRWXtfSg0vHiGZB1V402CVznD3rF0TOZAePk5Vik0RF8VcQKWAZCu3CCkHXxZAxzBHVjCXhy5UDpwKMjPiFJcGkqWzeOyW57sETrPZBN6HggZDZD';
 const request = require('request');
 const { default_alt } = require('./alternate.js')
-
-const sendTextMessage = (senderId, text) => {
-	request({
-		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: { access_token: FACEBOOK_ACCESS_TOKEN },
-		method: 'POST',
-		json: {
-			recipient: { id: senderId },
-			message: { text },
-		}
-	});
+var next_step=['Are you ready for the next step?','Are you done with the previous step?','Shall we move ahead?','Done?','Shall I tell you the next step?', 'Let me know when you are ready for next step.'];
+const sendTextMessage = (senderId, text, image='') => {
+	if(image==''){
+		request({
+			url: 'https://graph.facebook.com/v2.6/me/messages',
+			qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+			method: 'POST',
+			json: {
+				recipient: { id: senderId },
+				message: { text },
+			}
+		});
+	} else {
+		request({
+			url: 'https://graph.facebook.com/v2.6/me/messages',
+			qs: { access_token: FACEBOOK_ACCESS_TOKEN },
+			method: 'POST',
+			json: {
+				recipient: { id: senderId },
+				message: {
+					"attachment":{
+				      "type":"image",
+				      "payload":{
+				        "url": image
+				      }
+				    }
+				},
+			}
+		});
+	}
 };
 var cheerio = require('cheerio');
 
@@ -45,7 +64,14 @@ const scrapeDishes = (name, senderId) => {
 const scrapeRecipe = (url, senderId) => {
 	request(url, function (error, response, html) {
 	  if (!error && response.statusCode == 200) {
+		  steps = [];
+		  ingredients = [];
 	    var $ = cheerio.load(html);
+		var src = $('.rec-photo').attr("src");
+		console.log(src);
+		sendTextMessage(senderId, "", src);
+		if(src)
+		sendTextMessage(senderId, "The dish looks to be yummy!");
 		let message = "";
 		$('span.recipe-ingred_txt[itemprop]').each(function(i, element){
 	      var a = $(this).prev();
@@ -76,18 +102,34 @@ const scrapeRecipe = (url, senderId) => {
 	});
 }
 
-const showRecipe = (senderId, replace_ing) =>{
+const showRecipe = (senderId, replace_ing, text) =>{
 	if (count == steps.length){
 		count = 0;
 		steps = [];
 		ingredients = [];
-		sendTextMessage(senderId, "What are you saying yes about? :D");
+		sendTextMessage(senderId, "What are you saying " + text + " about? :D");
 		return;
 	}
 	var message = "";
+	var flag = 0;
 	console.log(replace_ing);
 	var temp = String(steps[count]).trim().split(" ");
 	for (var i = 0; i < temp.length; i++) {
+		if(temp[i].toLowerCase() in replace_ing) {
+			message+= replace_ing[temp[i]] + " ";
+			continue;
+		}
+		for (var j in  replace_ing) {
+			if(temp[i].toLowerCase().includes(j)){
+				message+= replace_ing[j] + " ";
+				flag = 1;
+				break;
+			}
+		}
+		if(flag) {
+			flag = 0;
+			continue;
+		}
 		if(temp[i].toLowerCase() in replace_ing) {
 			message+= replace_ing[temp[i]] + " ";
 			continue;
@@ -96,17 +138,23 @@ const showRecipe = (senderId, replace_ing) =>{
 	}
 	sendTextMessage(senderId, message);
 	count++;
-	if (count != steps.length){
-		setTimeout(function(){
-			sendTextMessage(senderId, "Are you ready for the next step?");
-		},10000);
-	};
-	if (count == steps.length){
+	if (count+1 == steps.length){
 		count = 0;
 		steps = [];
 		ingredients = [];
 		sendTextMessage(senderId, "That was the last step!");
+		return;
 	}
+	if (count != steps.length){
+		setTimeout(function(){
+			var min=0;
+    		var max=next_step.length;
+    		var random =Math.floor(Math.random() * (+max - +min)) + +min;
+			sendTextMessage(senderId, next_step[random]);
+			// sendTextMessage(senderId, "Are you ready for the next step?");
+		},1000);
+	};
+
 }
 
 const fromIngredients = (senderId, ingredients) => {
@@ -129,19 +177,21 @@ const fromIngredients = (senderId, ingredients) => {
 					  url: element.parent.attribs.href
 				  });
 				  dishes_output+="* " + element.children[0].data + "\n";
-				  // scrapeRecipe(element.parent.attribs.href, senderId);
+				  // scrapeRecipe(element.parent.attribs.href, senderId)	;
 			    });
 				resolve();
 			}
 		});
 	});
 	Promise.all([getDishes]).then(() => {
+		sendTextMessage(senderId, "Here are some dishes you can make: ");
 		sendTextMessage(senderId, dishes_output);
 	});
 
 }
 
 const findAlt = (senderId, ingredient) => {
+	var alt_def;
 	for (var i = 0; i < default_alt.length; i++) {
 		if (default_alt[i].name.toLowerCase().includes(ingredient[0].toLowerCase())) {
 			var options =  default_alt[i].diff.split("OR");
@@ -151,11 +201,12 @@ const findAlt = (senderId, ingredient) => {
 				message+=options[i].split(" ").slice(2).join(" ") + "OR ";
 			}
 			message+=options[options.length-1].split(" ").slice(2).join(" ") + "?";
+			alt_def = options[options.length-1].split(" ").slice(2).join(" ");
 			break;
 		}
 	}
 	sendTextMessage(senderId, message);
-
+	return alt_def;
 }
 
 module.exports = {
