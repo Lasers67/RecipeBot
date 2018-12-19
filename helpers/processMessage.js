@@ -43,7 +43,7 @@ module.exports = (event) => {
 	const message = event.message.text;
 	const apiaiSession = apiAiClient.textRequest(message, {sessionId: 'recipebot'});
 	console.log(message);
-	const { ability, scrapeDishes, showRecipe, fromIngredients, findAlt } = require('./scrape.js');
+	const { sendDesc, ability, scrapeDishes, showRecipe, fromIngredients, findAlt } = require('./scrape.js');
 	apiaiSession.on('response', (response) => {
 		const result = response.result.fulfillment.speech;
 		console.log(response);

@@ -93,8 +93,11 @@ const scrapeRecipe = (url, senderId) => {
 		},2000);
 		$('span.recipe-directions__list--item').each(function(i, element){
 	      var a = $(this).prev();
+
 	      // console.log(element.children[0].data);
 		  // console.log($(this).text());
+		  var res=$(this).text().split(".");
+		  console.log(res);
 		  steps.push($(this).text());
 		});
 	  }
@@ -229,9 +232,6 @@ const sendDesc = (senderId, name) => {
 			}
 		});
 	});
-	return Promise.all([firstResult]).then(() => {
-		return dishes;
-	});
 }
 
 const scrapeDesc = (url, senderId) => {
@@ -243,9 +243,13 @@ const scrapeDesc = (url, senderId) => {
 	      var a = $(this).prev();
 		  desc += ($(this).text());
 	    });
+		var src = $('.rec-photo').attr("src");
 		sendTextMessage(senderId, desc);
-	};
-}
+		sendTextMessage(senderId, "It looks good!");
+		sendTextMessage(senderId, "", src);
+		}
+	});
+};
 
 const ability = (senderId) => {
 	var res = "I can do a variety of things related to recipes. Some of them include-\n";
@@ -281,5 +285,5 @@ const ability = (senderId) => {
 }
 
 module.exports = {
-	scrapeDishes,ability, scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
+	sendDesc, ability, scrapeDishes, scrapeRecipe, showRecipe, fromIngredients, findAlt
 }
