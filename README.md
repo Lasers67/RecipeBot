@@ -31,4 +31,10 @@ RecipeBot can do a variety of things related to recipes. Some of them are-
 -	Alert dishes according to a particular festival or occasion.
 
 ## How to contribute?
-Clone the repo and feel free to send any Pull Requests that you feel to be contructive.
+Clone the repo and feel free to send any Pull Requests that you feel to be constructive.
+
+##  Demo at InterIIT TechMeet (Jio Hackathon)
+https://www.youtube.com/watch?v=1JhoKvdIajE.
+
+## Team Members
+[Abhigyan Khaund](https://github.com/abhigyank), [Pratyush Gaurav](https://github.com/Lasers67), [Vipul Sharma](https://github.com/vsvipul)
